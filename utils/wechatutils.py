@@ -6,11 +6,7 @@ class WechatUtils:
     def __init__(self):
         self.configs_path = self.get_configs_path()
         self.version_list = self.get_version_list()
-        if sys.platform.startswith('win'):
-            import winreg 
-        else:
-            winreg = None
-            
+
         # self.pid , self.version =  self.get_wechat_pid_and_version()
         # if self.pid is None and self.version is None:
         #     self.print_process_not_found_message()
@@ -29,9 +25,38 @@ class WechatUtils:
     def is_wechatEx_process(self, cmdline):
         process_name = "WeChatAppEx"
         return cmdline and process_name in cmdline[0] and "--type=" not in ' '.join(cmdline)
+    def get_wechat_pids_and_versions(self):
+        processes = (proc.info for proc in psutil.process_iter(['pid', 'cmdline'])) 
+        wechatEx_processes = (p for p in processes if self.is_wechatEx_process(p['cmdline']))
+        wechat_instances = []
+        for process in wechatEx_processes:
+            pid = process['pid']
+            version = self.extract_version_number(process['cmdline'])
+            if version in self.version_list:
+                wechat_instances.append((pid, version))
+        return wechat_instances
+
+    def get_wechat_pid_and_version(self):
+        wechat_instances = self.get_wechat_pids_and_versions()
+        return wechat_instances[0] if wechat_instances else (None, None)
+
+    def get_wechat_pids_and_versions_mac(self):
+        try:
+            pid_command = "ps aux | grep 'WeChatAppEx' |  grep -v 'grep' | grep ' --client_version' | grep '-user-agent=' | awk '{print $2}'"
+            version_command = "ps aux | grep 'WeChatAppEx' |  grep -v 'grep' | grep ' --client_version' | grep '-user-agent=' | grep -oE 'MacWechat/([0-9]+\.)+[0-9]+\(0x\d+\)' |  grep -oE '(0x\d+)' | sed 's/0x//g'"
+            pids = subprocess.run(pid_command, shell=True, check=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.split()
+            versions = subprocess.run(version_command, shell=True, check=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.split()
+            return list(zip(map(int, pids), versions))
+        except subprocess.CalledProcessError as e:
+            print(Color.RED + f"Error getting MacOS WeChat instances: {e.stderr}" + Color.END)
+            return []
+
+    def print_process_not_found_message(self):
+        print(Color.RED + "[-] 未找到匹配版本的微信进程或微信未运行" + Color.END)
     
     def find_installation_path(self, program_name):
         try:
+            import winreg
             reg_path = r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
             reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_path)
 
