@@ -141,11 +141,37 @@ function setupInterceptor() {
                 }
             })
             break;
+        case 11159:
+            Interceptor.attach(address.SwitchVersion, {
+                onEnter(args) {
+                    this.context.r8 = this.context.rax
+                    sendMessage()
+                }
+            })
+            break;          
 
         case 13080811:
             Interceptor.attach(address.WechatAppHtml, {
                 onEnter(args) {
                     this.context.rsi = address.WechatWebHtml
+                    sendMessage()
+                }
+            })
+            break;
+            
+        case 13080812:
+            Interceptor.attach(address.WechatAppHtml, {
+                onEnter(args) {
+                    this.context.rsi = address.WechatWebHtml
+                    sendMessage()
+                }
+            })
+            break;
+            
+        case 9193:
+            Interceptor.attach(address.SwitchVersion, {
+                onEnter(args) {
+                    this.context.r8 = this.context.rax
                     sendMessage()
                 }
             })
