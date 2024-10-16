@@ -176,7 +176,30 @@ function setupInterceptor() {
                 }
             })
             break;
-
+        case 11205:
+            Interceptor.attach(address.SwitchVersion, {
+                onEnter(args) {
+                    this.context.r8 = this.context.rax
+                    sendMessage()
+                }
+            })
+            break;
+        case 11275:
+            Interceptor.attach(address.SwitchVersion, {
+                onEnter(args) {
+                    this.context.r8 = this.context.rax
+                    sendMessage()
+                }
+            })
+            break;
+        case 11253:
+            Interceptor.attach(address.SwitchVersion, {
+                onEnter(args) {
+                    this.context.r8 = this.context.rax
+                    sendMessage()
+                }
+            })
+            break;
         default:
             console.log(address.Version);
             Interceptor.attach(address.WechatAppHtml, {
